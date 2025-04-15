@@ -40,21 +40,3 @@
 .read-the-docs {
   color: #888;
 }
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-@tailwind screens;
-@tailwind typography;
-@tailwind forms;
-@tailwind aspect-ratio;
-@tailwind line-clamp;
-@tailwind animate;
-@tailwind transition;
-@tailwind transition-all;
-@tailwind transition-colors;
-@tailwind transition-opacity;
-@tailwind transition-transform;
-@tailwind transition-shadow;
-@tailwind transition-transform;
-@tailwind transform;
-@tailwind transform-gpu;

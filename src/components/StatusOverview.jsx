@@ -1,202 +1,128 @@
-import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { tasks } from '../data/tasks';
-import { CheckCircle, Clock, AlertCircle, BarChart2, ChevronDown } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { ClipboardList, CheckCircle, Clock, Timer, User } from 'lucide-react';
 
-const CircularProgress = ({ value, size = 120 }) => {
-  const radius = size * 0.4;
-  const circumference = radius * 2 * Math.PI;
-  const strokeDashoffset = circumference - (value / 100) * circumference;
+const stats = [
+  { label: "Total Tasks", value: 24, icon: ClipboardList, color: "bg-blue-100 text-blue-800" },
+  { label: "Completed", value: 12, icon: CheckCircle, color: "bg-green-100 text-green-800" },
+  { label: "In Progress", value: 8, icon: Clock, color: "bg-yellow-100 text-yellow-800" },
+  { label: "Pending", value: 4, icon: Timer, color: "bg-red-100 text-red-800" }
+];
 
-  return (
-    <div className="relative" style={{ width: size, height: size }}>
-      <svg className="transform -rotate-90" width={size} height={size}>
-        <circle
-          className="text-gray-200"
-          strokeWidth="8"
-          stroke="currentColor"
-          fill="transparent"
-          r={radius}
-          cx={size / 2}
-          cy={size / 2}
-        />
-        <motion.circle
-          className="text-green-500"
-          strokeWidth="8"
-          strokeLinecap="round"
-          stroke="currentColor"
-          fill="transparent"
-          r={radius}
-          cx={size / 2}
-          cy={size / 2}
-          initial={{ strokeDashoffset: circumference }}
-          animate={{ strokeDashoffset }}
-          style={{ 
-            strokeDasharray: circumference,
-            transition: 'stroke-dashoffset 1s ease-in-out'
-          }}
-        />
-      </svg>
-      <div className="absolute inset-0 flex items-center justify-center">
-        <motion.span 
-          className="text-2xl font-bold text-gray-800"
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ delay: 0.5, type: "spring", stiffness: 200 }}
-        >
-          {value}%
-        </motion.span>
-      </div>
-    </div>
-  );
-};
+const teamMembers = [
+  {
+    id: 1,
+    name: "Alice",
+    role: "UI Designer",
+    avatar: "https://i.pravatar.cc/40?img=1",
+    sections: ["UI"],
+    completedTasks: 5,
+    totalTasks: 7
+  },
+  {
+    id: 2,
+    name: "Bob",
+    role: "Backend Developer",
+    avatar: "https://i.pravatar.cc/40?img=2",
+    sections: ["Backend"],
+    completedTasks: 4,
+    totalTasks: 6
+  },
+  {
+    id: 3,
+    name: "Charlie",
+    role: "QA Tester",
+    avatar: "https://i.pravatar.cc/40?img=3",
+    sections: ["Testing"],
+    completedTasks: 3,
+    totalTasks: 5
+  }
+];
 
 export default function StatusOverview() {
-  const [showDetails, setShowDetails] = useState(false);
-  const totalTasks = tasks.length;
-  const completedTasks = tasks.filter(task => task.status === 'Done').length;
-  const inProgressTasks = tasks.filter(task => task.status === 'In Progress').length;
-  const pendingTasks = tasks.filter(task => task.status === 'To Do').length;
+  const [progressWidth, setProgressWidth] = useState(50);
 
-  const stats = [
-    { 
-      label: 'Completed', 
-      count: completedTasks, 
-      icon: CheckCircle, 
-      color: 'green',
-      description: 'Tasks successfully completed'
-    },
-    { 
-      label: 'In Progress', 
-      count: inProgressTasks, 
-      icon: Clock, 
-      color: 'blue',
-      description: 'Tasks currently being worked on'
-    },
-    { 
-      label: 'Pending', 
-      count: pendingTasks, 
-      icon: AlertCircle, 
-      color: 'red',
-      description: 'Tasks yet to be started'
-    }
-  ];
-
-  const completionPercentage = Math.round((completedTasks / totalTasks) * 100);
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setProgressWidth(50);
+    }, 100);
+    return () => clearTimeout(timeout);
+  }, []);
 
   return (
-    <motion.div 
-      className="bg-white p-4 rounded-xl shadow-md"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-    >
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-          <BarChart2 className="text-blue-500" size={18} />
-          Project Status
-        </h2>
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={() => setShowDetails(!showDetails)}
-          className="text-gray-500 hover:text-gray-700"
-        >
-          <motion.div
-            animate={{ rotate: showDetails ? 180 : 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            <ChevronDown size={20} />
-          </motion.div>
-        </motion.button>
-      </div>
+    <div className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl shadow-lg p-6 overflow-x-auto">
+      <h2 className="text-3xl font-extrabold text-blue-900 mb-6">Project Status</h2>
 
-      <div className="flex flex-col items-center mb-6">
-        <CircularProgress value={completionPercentage} />
-        <p className="text-sm text-gray-600 mt-2">Overall Progress</p>
-      </div>
-
-      <motion.div 
-        className="grid grid-cols-3 gap-4"
-        variants={{
-          hidden: { opacity: 0 },
-          visible: {
-            opacity: 1,
-            transition: {
-              staggerChildren: 0.1
-            }
-          }
-        }}
-        initial="hidden"
-        animate="visible"
-      >
-        {stats.map(({ label, count, icon: Icon, color, description }) => (
-          <motion.div
-            key={label}
-            className={`flex flex-col items-center p-3 bg-${color}-50 rounded-lg relative group`}
-            variants={{
-              hidden: { opacity: 0, y: 20 },
-              visible: { opacity: 1, y: 0 }
-            }}
-            whileHover={{ scale: 1.05 }}
-          >
-            <Icon className={`text-${color}-500`} size={22} />
-            <motion.span 
-              className="text-2xl font-bold text-gray-800 mt-1"
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+      <div className="flex space-x-6 min-w-max mb-8">
+        {stats.map((stat, index) => {
+          const Icon = stat.icon;
+          return (
+            <div
+              key={index}
+              className={`${stat.color} p-6 rounded-xl flex flex-col items-center shadow-lg cursor-pointer hover:shadow-2xl transition-shadow w-44`}
+              title={stat.label}
+              tabIndex={0}
+              aria-label={`${stat.label}: ${stat.value}`}
             >
-              {count}
-            </motion.span>
-            <span className="text-xs text-gray-600">{label}</span>
-            
-            <motion.div
-              initial={{ opacity: 0 }}
-              whileHover={{ opacity: 1 }}
-              className="absolute -top-12 left-1/2 transform -translate-x-1/2 px-3 py-1.5 bg-gray-800 text-white text-xs rounded-lg whitespace-nowrap pointer-events-none"
-            >
-              {description}
-              <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 rotate-45 w-2 h-2 bg-gray-800" />
-            </motion.div>
-          </motion.div>
-        ))}
-      </motion.div>
-
-      <AnimatePresence>
-        {showDetails && (
-          <motion.div 
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            className="overflow-hidden"
-          >
-            <div className="mt-6 pt-4 border-t border-gray-100">
-              <div className="space-y-2">
-                {stats.map(({ label, count, color }) => (
-                  <div key={label} className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">{label}</span>
-                    <div className="flex items-center gap-2">
-                      <div className="w-24 h-2 bg-gray-100 rounded-full overflow-hidden">
-                        <motion.div
-                          className={`h-full bg-${color}-500`}
-                          initial={{ width: 0 }}
-                          animate={{ width: `${(count / totalTasks) * 100}%` }}
-                          transition={{ duration: 0.8, ease: "easeOut" }}
-                        />
-                      </div>
-                      <span className="text-xs text-gray-500 w-12 text-right">
-                        {Math.round((count / totalTasks) * 100)}%
-                      </span>
-                    </div>
-                  </div>
-                ))}
+              <div className="bg-white p-3 rounded-full mb-3 flex items-center justify-center shadow-md">
+                <Icon size={36} strokeWidth={1.5} />
               </div>
+              <div className="text-4xl font-extrabold">{stat.value}</div>
+              <div className="text-lg font-semibold">{stat.label}</div>
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.div>
+          );
+        })}
+      </div>
+
+      <div className="mb-8">
+        <h3 className="text-xl font-semibold text-blue-800 mb-3">Overall Progress</h3>
+        <div className="w-full bg-blue-200 rounded-full h-5 overflow-hidden cursor-pointer">
+          <div
+            className="bg-blue-600 h-5 rounded-full transition-all duration-1000 ease-in-out"
+            style={{ width: progressWidth + '%' }}
+            title={`${progressWidth}% Complete`}
+          ></div>
+        </div>
+        <div className="flex justify-between mt-2 text-sm text-blue-900 font-semibold">
+          <span>Started: May 1, 2025</span>
+          <span>{progressWidth}% Complete</span>
+        </div>
+      </div>
+
+      <div>
+        <h3 className="text-xl font-semibold text-blue-800 mb-4 flex items-center gap-2">
+          <User size={24} />
+          Team Member Responsibilities
+        </h3>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+          {teamMembers.map((member) => {
+            const completionPercent = Math.round((member.completedTasks / member.totalTasks) * 100);
+            return (
+              <div key={member.id} className="bg-white rounded-lg shadow-md p-4 flex flex-col items-center">
+                <img
+                  src={member.avatar}
+                  alt={`${member.name} avatar`}
+                  className="w-16 h-16 rounded-full mb-3"
+                />
+                <div className="text-lg font-bold text-blue-900">{member.name}</div>
+                <div className="text-sm text-blue-700 mb-2">{member.role}</div>
+                <div className="text-sm text-blue-700 mb-2">
+                  Sections: {member.sections.join(', ')}
+                </div>
+                <div className="w-full bg-blue-100 rounded-full h-4 overflow-hidden">
+                  <div
+                    className="bg-blue-600 h-4 rounded-full transition-all duration-500 ease-in-out"
+                    style={{ width: `${completionPercent}%` }}
+                    title={`${completionPercent}% Tasks Completed`}
+                  ></div>
+                </div>
+                <div className="mt-1 text-sm text-blue-900 font-semibold">
+                  {completionPercent}% Tasks Completed
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
   );
 }

@@ -1,124 +1,75 @@
-import { motion, AnimatePresence } from 'framer-motion';
-import { CalendarDays, AlertTriangle, CheckCircle } from 'lucide-react';
-import { tasks } from '../data/tasks';
+import React, { useEffect, useState } from 'react';
+import { Calendar, AlertTriangle } from 'lucide-react';
+
+const deadlines = [
+  { id: 1, title: "Project Proposal", dueDate: "2025-06-15" },
+  { id: 2, title: "Design Review", dueDate: "2025-06-20" },
+  { id: 3, title: "Final Submission", dueDate: "2025-07-01" }
+];
+
+function daysLeft(dueDate) {
+  const now = new Date();
+  const due = new Date(dueDate);
+  const diffTime = due - now;
+  return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+}
 
 export default function DeadlineCountdown() {
-  const upcomingDeadlines = tasks
-    .filter(task => task.status !== 'Done')
-    .sort((a, b) => new Date(a.due) - new Date(b.due))
-    .slice(0, 3);
+  const [now, setNow] = useState(new Date());
 
-  const calculateDaysLeft = (dueDate) => {
-    const today = new Date();
-    const due = new Date(dueDate);
-    const diffTime = due - today;
-    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  };
-
-  const container = {
-    hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1
-      }
-    }
-  };
+  useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), 60000);
+    return () => clearInterval(timer);
+  }, []);
 
   return (
-    <motion.div 
-      className="bg-white p-4 rounded-xl shadow-md"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      whileHover={{ scale: 1.02 }}
-    >
-      <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-2 mb-3">
-        <motion.div
-          whileHover={{ rotate: 360 }}
-          transition={{ duration: 0.5 }}
-        >
-          <CalendarDays size={18} className="text-blue-500" />
-        </motion.div>
+    <div className="bg-white rounded-xl shadow-lg p-6">
+      <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+        <Calendar size={24} />
         Upcoming Deadlines
       </h2>
-      <motion.ul 
-        className="space-y-3"
-        variants={container}
-        initial="hidden"
-        animate="show"
-      >
-        <AnimatePresence>
-          {upcomingDeadlines.map(task => {
-            const daysLeft = calculateDaysLeft(task.due);
-            const isUrgent = daysLeft <= 3;
-            const isPastDue = daysLeft < 0;
-            
-            return (
-              <motion.li 
-                key={task.id} 
-                layout
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 20 }}
-                whileHover={{ 
-                  scale: 1.02,
-                  backgroundColor: isUrgent ? 'rgb(254, 242, 242)' : 'rgb(239, 246, 255)'
-                }}
-                className={`py-3 px-4 rounded-lg transition-colors ${
-                  isUrgent ? 'bg-red-50' : 'bg-blue-50'
-                }`}
-              >
-                <div className="flex justify-between items-start">
-                  <div className="flex-1">
-                    <h3 className="font-medium text-gray-800 mb-1">{task.title}</h3>
-                    <p className="text-sm text-gray-600 line-clamp-2">{task.description}</p>
-                  </div>
-                  <motion.div 
-                    className={`ml-4 flex items-center gap-1 px-3 py-1 rounded-full ${
-                      isPastDue ? 'bg-red-100 text-red-700' :
-                      isUrgent ? 'bg-orange-100 text-orange-700' :
-                      'bg-green-100 text-green-700'
-                    }`}
-                    whileHover={{ scale: 1.1 }}
-                  >
-                    {isPastDue ? (
-                      <AlertTriangle size={14} />
-                    ) : isUrgent ? (
-                      <AlertTriangle size={14} />
-                    ) : (
-                      <CheckCircle size={14} />
-                    )}
-                    <span className="text-xs font-semibold whitespace-nowrap">
-                      {isPastDue ? 'Past due' :
-                       `${daysLeft} day${daysLeft !== 1 ? 's' : ''} left`}
-                    </span>
-                  </motion.div>
+
+      <ul className="space-y-4">
+        {deadlines.map(({ id, title, dueDate }) => {
+          const left = daysLeft(dueDate);
+          const isUrgent = left <= 7;
+          const progressPercent = Math.min(100, Math.max(0, ((30 - left) / 30) * 100));
+
+          return (
+            <li
+              key={id}
+              className={`p-4 rounded-lg border ${
+                isUrgent ? 'border-red-400 bg-red-50' : 'border-gray-200 bg-gray-50'
+              } shadow-md`}
+              title={`${title} deadline on ${new Date(dueDate).toLocaleDateString()}`}
+            >
+              <div className="flex justify-between items-center mb-2">
+                <div className="flex items-center gap-2">
+                  <Calendar size={20} className="text-gray-600" />
+                  <span className="font-semibold text-gray-900">{title}</span>
+                  {isUrgent && (
+                    <AlertTriangle size={18} className="text-red-600" title="Urgent deadline approaching" />
+                  )}
                 </div>
-                <motion.div 
-                  className="w-full bg-gray-200 h-1 rounded-full mt-2 overflow-hidden"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.2 }}
-                >
-                  <motion.div 
-                    className={`h-full rounded-full ${
-                      isPastDue ? 'bg-red-500' :
-                      isUrgent ? 'bg-orange-500' :
-                      'bg-green-500'
-                    }`}
-                    initial={{ width: 0 }}
-                    animate={{ 
-                      width: `${Math.max(0, Math.min(100, (1 - daysLeft/14) * 100))}%` 
-                    }}
-                    transition={{ duration: 1, ease: "easeOut" }}
-                  />
-                </motion.div>
-              </motion.li>
-            );
-          })}
-        </AnimatePresence>
-      </motion.ul>
-    </motion.div>
+                <span className="text-sm text-gray-700">{new Date(dueDate).toLocaleDateString()}</span>
+              </div>
+
+              <div className="w-full bg-gray-300 rounded-full h-3 overflow-hidden">
+                <div
+                  className={`h-3 rounded-full transition-all duration-1000 ease-in-out ${
+                    isUrgent ? 'bg-red-500' : 'bg-blue-600'
+                  }`}
+                  style={{ width: `${progressPercent}%` }}
+                ></div>
+              </div>
+
+              <div className="mt-1 text-xs text-gray-600">
+                {left > 0 ? `${left} day${left !== 1 ? 's' : ''} left` : 'Deadline passed'}
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
   );
 }

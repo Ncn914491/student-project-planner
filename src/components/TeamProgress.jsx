@@ -1,174 +1,117 @@
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Users, Award, Star, TrendingUp } from 'lucide-react';
+import React, { useState } from 'react';
+import { User, CheckCircle, Calendar, Users, Flag } from 'lucide-react';
 
-export default function TeamProgress({ projectId }) {
-  const [teamData, setTeamData] = useState(null);
-  const [selectedView, setSelectedView] = useState('contributions');
+const teamMembers = [
+  { id: 1, name: "Alice", role: "Project Manager", avatar: "https://i.pravatar.cc/40?img=1", lastContribution: "2025-06-10" },
+  { id: 2, name: "Bob", role: "Frontend Developer", avatar: "https://i.pravatar.cc/40?img=2", lastContribution: "2025-06-12" },
+  { id: 3, name: "Charlie", role: "Backend Developer", avatar: "https://i.pravatar.cc/40?img=3", lastContribution: "2025-06-11" },
+  { id: 4, name: "Dana", role: "UI/UX Designer", avatar: "https://i.pravatar.cc/40?img=4", lastContribution: "2025-06-09" }
+];
 
-  useEffect(() => {
-    const loadTeamData = async () => {
-      try {
-        const { team } = await import('../data/team');
-        setTeamData({
-          members: team.map(member => ({
-            ...member,
-            completedTasks: member.tasksCompleted,
-            isOnline: true
-          })),
-          milestones: []
-        });
-      } catch (error) {
-        console.error('Error loading team data:', error);
-      }
-    };
+const stats = [
+  { label: "Team Members", value: teamMembers.length, icon: Users, color: "bg-blue-100 text-blue-800" },
+  { label: "Completed Tasks", value: 12, icon: CheckCircle, color: "bg-green-100 text-green-800" },
+  { label: "Milestones", value: 5, icon: Calendar, color: "bg-yellow-100 text-yellow-800" }
+];
 
-    loadTeamData();
-  }, [projectId]);
+const milestones = [
+  { id: 1, title: "Project Kickoff", date: "2025-05-01", description: "Initial project kickoff meeting and planning." },
+  { id: 2, title: "Design Approval", date: "2025-05-15", description: "Final design approved by stakeholders." },
+  { id: 3, title: "Beta Release", date: "2025-06-01", description: "Beta version released for testing." },
+  { id: 4, title: "Final Release", date: "2025-06-20", description: "Official final release of the project." }
+];
 
-  if (!teamData) {
-    return (
-      <div className="bg-white rounded-xl shadow-md p-6 animate-pulse">
-        <div className="h-8 w-48 bg-gray-200 rounded mb-4"></div>
-        <div className="space-y-3">
-          <div className="h-4 w-full bg-gray-200 rounded"></div>
-          <div className="h-4 w-3/4 bg-gray-200 rounded"></div>
-        </div>
-      </div>
-    );
-  }
-
-  const renderContributions = () => (
-    <div className="space-y-4">
-      {teamData.members.map((member) => (
-        <div key={member.id} className="flex items-center gap-4">
-          <div className="relative">
-            <img
-              src={member.avatar}
-              alt={member.name}
-              className="w-10 h-10 rounded-full"
-            />
-            {member.isOnline && (
-              <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-400 rounded-full border-2 border-white"></span>
-            )}
-          </div>
-          <div className="flex-1">
-            <div className="flex items-center justify-between mb-1">
-              <span className="font-medium text-gray-900">{member.name}</span>
-              <span className="text-sm text-gray-500">{member.role}</span>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
-              <motion.div
-                className="bg-blue-500 h-2 rounded-full"
-                initial={{ width: 0 }}
-                animate={{ width: `${member.progress}%` }}
-                transition={{ duration: 1, ease: "easeOut" }}
-              />
-            </div>
-          </div>
-          <div className="text-right">
-            <div className="text-sm font-medium text-gray-900">{member.completedTasks}</div>
-            <div className="text-xs text-gray-500">tasks</div>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-
-  const renderMilestones = () => (
-    <div className="space-y-4">
-      {teamData.milestones.map((milestone, index) => (
-        <div
-          key={milestone.id}
-          className="relative flex items-center gap-4 pb-4"
-        >
-          <div className="absolute left-4 h-full w-0.5 bg-gray-200" />
-          <div className={`w-8 h-8 rounded-full flex items-center justify-center z-10 
-            ${milestone.completed ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-600'}`}>
-            <Star size={16} />
-          </div>
-          <div className="flex-1">
-            <h3 className="font-medium text-gray-900">{milestone.title}</h3>
-            <p className="text-sm text-gray-500">{milestone.description}</p>
-            <div className="flex items-center gap-2 mt-1">
-              <div className="text-xs font-medium text-gray-500">
-                {milestone.dueDate}
-              </div>
-              {milestone.completed && (
-                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
-                  Completed
-                </span>
-              )}
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
+export default function TeamProgress() {
+  const [activeTab, setActiveTab] = useState('Contributions');
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="bg-white rounded-xl shadow-md p-6"
-    >
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-lg font-semibold text-gray-800">Team Progress</h2>
-        <div className="flex gap-2">
+    <div className="bg-white rounded-xl shadow-lg p-6">
+      <h2 className="text-2xl font-bold text-gray-900 mb-4">Team Progress</h2>
+
+      <div className="flex space-x-4 mb-6 border-b border-gray-200">
+        {['Contributions', 'Milestones'].map(tab => (
           <button
-            onClick={() => setSelectedView('contributions')}
-            className={`inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium
-              ${selectedView === 'contributions'
-                ? 'bg-blue-100 text-blue-700'
-                : 'text-gray-600 hover:bg-gray-100'
-              }`}
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`px-4 py-2 font-semibold rounded-t-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              activeTab === tab
+                ? `border-b-4 border-blue-600 text-blue-700 bg-blue-50 shadow`
+                : `text-gray-600 hover:text-blue-600 hover:bg-blue-50`
+            }`}
+            aria-pressed={activeTab === tab}
           >
-            <Users size={16} className="mr-1.5" />
-            Contributions
+            {tab}
           </button>
-          <button
-            onClick={() => setSelectedView('milestones')}
-            className={`inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium
-              ${selectedView === 'milestones'
-                ? 'bg-blue-100 text-blue-700'
-                : 'text-gray-600 hover:bg-gray-100'
-              }`}
-          >
-            <Award size={16} className="mr-1.5" />
-            Milestones
-          </button>
-        </div>
+        ))}
       </div>
 
-      {/* Summary Stats */}
-      <div className="grid grid-cols-3 gap-4 mb-6">
-        <div className="bg-gray-50 rounded-lg p-4">
-          <div className="text-sm text-gray-500 mb-1">Team Members</div>
-          <div className="text-2xl font-semibold text-gray-900">
-            {teamData.members.length}
+      <div className="flex flex-col md:flex-row gap-6">
+        <div className="flex-1">
+          <div className="flex flex-wrap gap-4">
+            {stats.map(({ label, value, icon: Icon, color }) => (
+              <div
+                key={label}
+                className={`${color} p-4 rounded-lg flex items-center gap-3 shadow-md cursor-pointer hover:shadow-lg transition-shadow w-full md:w-auto`}
+                title={label}
+                tabIndex={0}
+                aria-label={`${label}: ${value}`}
+              >
+                <div className="bg-white p-2 rounded-full flex items-center justify-center">
+                  <Icon size={28} strokeWidth={1.5} />
+                </div>
+                <div>
+                  <div className="text-2xl font-extrabold">{value}</div>
+                  <div className="text-sm">{label}</div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
-        <div className="bg-gray-50 rounded-lg p-4">
-          <div className="text-sm text-gray-500 mb-1">Completed Tasks</div>
-          <div className="text-2xl font-semibold text-gray-900">
-            {teamData.members.reduce((sum, m) => sum + m.completedTasks, 0)}
-          </div>
-        </div>
-        <div className="bg-gray-50 rounded-lg p-4">
-          <div className="text-sm text-gray-500 mb-1">Overall Progress</div>
-          <div className="flex items-center">
-            <div className="text-2xl font-semibold text-gray-900">
-              {Math.round(
-                (teamData.members.reduce((sum, m) => sum + m.progress, 0) /
-                  teamData.members.length)
-              )}%
-            </div>
-            <TrendingUp size={20} className="ml-2 text-green-500" />
-          </div>
+
+        <div className="flex-1">
+          {activeTab === 'Contributions' && (
+            <ul className="space-y-4">
+              {teamMembers.map(({ id, name, role, avatar, lastContribution }) => (
+                <li
+                  key={id}
+                  className="flex items-center gap-4 p-3 rounded-lg border border-gray-200 shadow-md hover:shadow-lg transition-shadow cursor-default"
+                  title={`${name} - ${role}`}
+                >
+                  <img
+                    src={avatar}
+                    alt={`${name}'s avatar`}
+                    className="w-12 h-12 rounded-full object-cover"
+                    onError={(e) => {
+                      e.currentTarget.onerror = null;
+                      e.currentTarget.src = 'https://via.placeholder.com/48?text=User';
+                    }}
+                  />
+                  <div className="flex flex-col">
+                    <span className="font-semibold text-gray-900">{name}</span>
+                    <span className="text-sm text-gray-600">{role}</span>
+                    <span className="text-xs text-gray-500 italic">Last contribution: {lastContribution}</span>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {activeTab === 'Milestones' && (
+            <ul className="space-y-4">
+              {milestones.map(({ id, title, date, description }) => (
+                <li key={id} className="p-4 rounded-lg border border-gray-200 shadow-md hover:shadow-lg transition-shadow cursor-default">
+                  <div className="flex items-center gap-3 mb-2">
+                    <Flag size={20} className="text-yellow-600" />
+                    <h3 className="font-semibold text-gray-900">{title}</h3>
+                    <span className="ml-auto text-sm text-gray-700">{new Date(date).toLocaleDateString()}</span>
+                  </div>
+                  <p className="text-sm text-gray-700">{description}</p>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       </div>
-
-      {selectedView === 'contributions' ? renderContributions() : renderMilestones()}
-    </motion.div>
+    </div>
   );
 }

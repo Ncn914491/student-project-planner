@@ -1,179 +1,162 @@
-import { useState, useEffect, useRef } from 'react';
-import { motion } from 'framer-motion';
-import { Save, AlertTriangle } from 'lucide-react';
-import { useToast } from './Toast';
-import debounce from 'lodash/debounce';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
+import React, { useState, useEffect } from 'react';
+import { ChevronDown, ChevronUp, Plus, Edit2, X } from 'lucide-react';
+import { notes as initialNotes } from '../data/notes';
 
-export default function ProjectNotes({ projectId }) {
-  const [notes, setNotes] = useState('');
-  const [isEditing, setIsEditing] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-  const textareaRef = useRef(null);
-  const { addToast } = useToast();
+export default function ProjectNotes() {
+  const [notes, setNotes] = useState(initialNotes);
+  const [expandedNoteIds, setExpandedNoteIds] = useState([]);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalContent, setModalContent] = useState('');
+  const [modalTitle, setModalTitle] = useState('');
+  const [editingNoteId, setEditingNoteId] = useState(null);
 
-  // Load initial notes
-  useEffect(() => {
-    const loadNotes = async () => {
-      try {
-        // Simulated API call
-        const response = await import('../data/notes');
-        const projectNotes = response.notes.find(n => n.projectId === projectId);
-        setNotes(projectNotes?.content || '');
-      } catch (error) {
-        console.error('Error loading notes:', error);
-        addToast('Failed to load notes', 'error');
-      }
-    };
-
-    loadNotes();
-  }, [projectId, addToast]);
-
-  // Autosave functionality
-  const saveNotes = debounce(async (content) => {
-    setIsSaving(true);
-    try {
-      // Simulated API call
-      await new Promise(resolve => setTimeout(resolve, 500));
-      setHasUnsavedChanges(false);
-      addToast('Notes saved successfully', 'success');
-    } catch (error) {
-      console.error('Error saving notes:', error);
-      addToast('Failed to save notes', 'error');
-    } finally {
-      setIsSaving(false);
-    }
-  }, 1000);
-
-  // Handle changes
-  const handleChange = (e) => {
-    const content = e.target.value;
-    setNotes(content);
-    setHasUnsavedChanges(true);
-    saveNotes(content);
+  const toggleExpand = (id) => {
+    setExpandedNoteIds((prev) =>
+      prev.includes(id) ? prev.filter((nid) => nid !== id) : [...prev, id]
+    );
   };
 
-  // Handle keyboard shortcuts
-  const handleKeyDown = (e) => {
-    if (e.key === 'Escape') {
-      setIsEditing(false);
-    } else if (e.ctrlKey || e.metaKey) {
-      if (e.key === 's') {
-        e.preventDefault();
-        saveNotes.flush();
-      } else if (e.key === 'e') {
-        e.preventDefault();
-        setIsEditing(true);
-      }
-    }
+  const openEditModal = (note) => {
+    setModalContent(note.content);
+    setModalTitle(note.title);
+    setEditingNoteId(note.id);
+    setModalOpen(true);
   };
 
-  // Auto-resize textarea
-  useEffect(() => {
-    if (textareaRef.current && isEditing) {
-      textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = textareaRef.current.scrollHeight + 'px';
-    }
-  }, [notes, isEditing]);
+  const openAddModal = () => {
+    setModalContent('');
+    setModalTitle('');
+    setEditingNoteId(null);
+    setModalOpen(true);
+  };
 
-  // Cleanup
-  useEffect(() => {
-    return () => {
-      if (hasUnsavedChanges) {
-        saveNotes.flush();
-      }
-    };
-  }, [hasUnsavedChanges, saveNotes]);
+  const closeModal = () => setModalOpen(false);
+
+  const saveModalContent = () => {
+    if (editingNoteId !== null) {
+      setNotes((prevNotes) =>
+        prevNotes.map((note) =>
+          note.id === editingNoteId ? { ...note, content: modalContent, title: modalTitle } : note
+        )
+      );
+    } else {
+      const newNote = {
+        id: Date.now(),
+        title: modalTitle || 'Untitled',
+        content: modalContent,
+        date: new Date().toISOString().split('T')[0],
+        author: 'Unknown',
+      };
+      setNotes((prevNotes) => [...prevNotes, newNote]);
+    }
+    closeModal();
+  };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="bg-white rounded-xl shadow-md p-6"
-    >
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold text-gray-800">Project Notes</h2>
-        <div className="flex items-center gap-2">
-          {hasUnsavedChanges && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="flex items-center gap-1 text-yellow-600 text-sm"
-            >
-              <AlertTriangle size={14} />
-              <span>Unsaved changes</span>
-            </motion.div>
-          )}
-          {isSaving && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="flex items-center gap-1 text-blue-600 text-sm"
-            >
-              <Save size={14} className="animate-pulse" />
-              <span>Saving...</span>
-            </motion.div>
-          )}
-          <button
-            onClick={() => setIsEditing(!isEditing)}
-            className="px-3 py-1 text-sm font-medium text-gray-700 hover:text-gray-900 
-                     bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
-          >
-            {isEditing ? 'Preview' : 'Edit'}
-          </button>
-        </div>
+    <div className="bg-white rounded-xl shadow-lg p-6">
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+          Project Notes
+          <Plus
+            size={20}
+            className="cursor-pointer text-blue-600 hover:text-blue-800"
+            onClick={openAddModal}
+            aria-label="Add new note"
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') openAddModal();
+            }}
+          />
+        </h2>
       </div>
 
-      <div className="relative min-h-[200px]">
-        <AnimatePresence mode="wait">
-          {isEditing ? (
-            <motion.div
-              key="editor"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="relative"
+      {notes.map((note) => (
+        <div key={note.id} className="mb-4 border border-gray-200 rounded-lg shadow-sm">
+          <button
+            className="w-full flex justify-between items-center p-4 bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            onClick={() => toggleExpand(note.id)}
+            aria-expanded={expandedNoteIds.includes(note.id)}
+            aria-controls={`note-content-${note.id}`}
+          >
+            <span className="font-semibold text-lg">{note.title}</span>
+            {expandedNoteIds.includes(note.id) ? <ChevronUp /> : <ChevronDown />}
+          </button>
+          {expandedNoteIds.includes(note.id) && (
+            <div
+              id={`note-content-${note.id}`}
+              className="p-4 bg-white prose max-w-none whitespace-pre-wrap"
             >
-              <textarea
-                ref={textareaRef}
-                value={notes}
-                onChange={handleChange}
-                onKeyDown={handleKeyDown}
-                placeholder="Write your notes here... (Markdown supported)"
-                className="w-full min-h-[200px] p-4 text-gray-800 bg-gray-50 rounded-lg 
-                         border border-gray-200 focus:ring-2 focus:ring-blue-500 
-                         focus:border-transparent resize-none outline-none"
-                spellCheck="true"
-                autoFocus
-              />
-              <div className="absolute bottom-2 right-2 text-xs text-gray-400">
-                Press Esc to exit, Ctrl+S to save
+              <p>{note.content}</p>
+              <div className="mt-2 flex justify-between text-xs text-gray-500">
+                <span>{note.date}</span>
+                <span>{note.author}</span>
+                <button
+                  onClick={() => openEditModal(note)}
+                  className="text-blue-600 hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  aria-label={`Edit note ${note.title}`}
+                >
+                  <Edit2 size={16} />
+                </button>
               </div>
-            </motion.div>
-          ) : (
-            <motion.div
-              key="preview"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="prose prose-sm max-w-none p-4 bg-gray-50 rounded-lg min-h-[200px]"
-              onClick={() => setIsEditing(true)}
-            >
-              {notes ? (
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                  {notes}
-                </ReactMarkdown>
-              ) : (
-                <p className="text-gray-400 italic">
-                  Click to add project notes...
-                </p>
-              )}
-            </motion.div>
+            </div>
           )}
-        </AnimatePresence>
-      </div>
-    </motion.div>
+        </div>
+      ))}
+
+      {/* Modal */}
+      {modalOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="modal-title"
+          onClick={closeModal}
+        >
+          <div
+            className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-lg shadow-lg"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 id="modal-title" className="text-xl font-bold mb-4 text-gray-900 dark:text-gray-100">
+              {editingNoteId !== null ? 'Edit Note' : 'Add Note'}
+            </h3>
+            <label className="block mb-2 font-semibold text-gray-700 dark:text-gray-300">
+              Title
+              <input
+                type="text"
+                value={modalTitle}
+                onChange={(e) => setModalTitle(e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-100"
+              />
+            </label>
+            <label className="block mb-4 font-semibold text-gray-700 dark:text-gray-300">
+              Content
+              <textarea
+                value={modalContent}
+                onChange={(e) => setModalContent(e.target.value)}
+                className="w-full h-48 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none dark:bg-gray-700 dark:text-gray-100"
+                aria-label="Note content editor"
+              />
+            </label>
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={closeModal}
+                className="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={saveModalContent}
+                className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
