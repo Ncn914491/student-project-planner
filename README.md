@@ -71,7 +71,3 @@ The following fixes were made to resolve Tailwind CSS issues:
   - `data/`: Mock data for the application
   - `FinalApp.jsx`: Main application component
   - `index.css`: Global styles and Tailwind CSS imports
-
-## License
-
-MIT
