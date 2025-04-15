@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Edit2, CheckCircle, Plus } from 'lucide-react';
-import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 
 const taskStatuses = [
   { name: 'To Do', color: 'text-red-600', bgColor: 'bg-red-50', iconBg: 'bg-red-100' },
@@ -190,7 +190,7 @@ export default function TaskBoard() {
                                 type="button"
                                 aria-label={`Mark task ${task.title} as done`}
                                 onClick={(e) => { e.stopPropagation(); markAsDone(task.id); }}
-                                className="p-1 rounded hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-green-500"
+                                className="p-1 rounded hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-green-500"       
                               >
                                 <CheckCircle size={16} />
                               </button>
@@ -286,7 +286,7 @@ export default function TaskBoard() {
               <button
                 type="button"
                 onClick={closeEditModal}
-                className="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500"
+                className="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500"      
               >
                 Cancel
               </button>
