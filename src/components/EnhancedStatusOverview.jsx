@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CheckCircle, Clock, AlertCircle, X, Users, ChevronDown, ChevronUp, Calendar, AlertTriangle } from 'lucide-react';
+import { CheckCircle, Clock, AlertCircle, X, Users, ChevronDown, ChevronUp, Calendar, AlertTriangle, TrendingUp, Activity, Zap, BarChart2 } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
+import { format, parseISO, isValid } from 'date-fns';
 
 export default function EnhancedStatusOverview({ tasks = [], projectData = {} }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -10,12 +11,23 @@ export default function EnhancedStatusOverview({ tasks = [], projectData = {} })
   const [daysRemaining, setDaysRemaining] = useState(0);
   const [percentComplete, setPercentComplete] = useState(0);
 
+  const formatDate = (dateString) => {
+    try {
+      const date = parseISO(dateString);
+      if (!isValid(date)) return 'Invalid date';
+      return format(date, 'MMM d, yyyy');
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return 'Invalid date';
+    }
+  };
+
   // Calculate statistics
   const totalTasks = tasks.length;
   const completedTasks = tasks.filter(task => task.status === 'Done').length;
   const inProgressTasks = tasks.filter(task => task.status === 'In Progress').length;
   const pendingTasks = tasks.filter(task => task.status === 'To Do').length;
-  
+
   useEffect(() => {
     // Calculate days remaining until deadline
     if (projectData.deadline) {
@@ -24,7 +36,7 @@ export default function EnhancedStatusOverview({ tasks = [], projectData = {} })
       const timeDiff = deadline - today;
       setDaysRemaining(Math.ceil(timeDiff / (1000 * 60 * 60 * 24)));
     }
-    
+
     // Calculate percentage complete
     if (totalTasks > 0) {
       setPercentComplete(Math.round((completedTasks / totalTasks) * 100));
@@ -44,86 +56,85 @@ export default function EnhancedStatusOverview({ tasks = [], projectData = {} })
   });
 
   const stats = [
-    { 
-      label: "Total Tasks", 
-      value: totalTasks, 
-      icon: Users, 
-      color: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300" 
+    {
+      label: "Total Tasks",
+      value: totalTasks,
+      icon: Users,
+      color: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300"
     },
-    { 
-      label: "Completed", 
-      value: completedTasks, 
-      icon: CheckCircle, 
-      color: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300" 
+    {
+      label: "Completed",
+      value: completedTasks,
+      icon: CheckCircle,
+      color: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300"
     },
-    { 
-      label: "In Progress", 
-      value: inProgressTasks, 
-      icon: Clock, 
-      color: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300" 
+    {
+      label: "In Progress",
+      value: inProgressTasks,
+      icon: Clock,
+      color: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300"
     },
-    { 
-      label: "Pending", 
-      value: pendingTasks, 
-      icon: AlertCircle, 
-      color: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300" 
+    {
+      label: "Pending",
+      value: pendingTasks,
+      icon: AlertCircle,
+      color: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300"
     }
   ];
 
   const toggleSection = (section) => {
-    setExpandedSections(prev => 
-      prev.includes(section) 
-        ? prev.filter(s => s !== section) 
+    setExpandedSections(prev =>
+      prev.includes(section)
+        ? prev.filter(s => s !== section)
         : [...prev, section]
     );
   };
 
-  // Format date for display
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    });
-  };
+  // We're using the formatDate function defined above
 
   return (
     <div className="card">
-      <div className="card-header">
-        <h2 className="section-title">Project Status</h2>
+      <div className="card-header mb-1">
+        <h2 className="section-title text-sm">Project Status</h2>
       </div>
-      
-      {/* Project Deadline Section */}
-      <div className="mb-5 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-100 dark:border-gray-700/50">
-        <div className="flex items-center justify-between mb-2">
-          <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
-            <Calendar size={16} className="text-blue-600 dark:text-blue-400" />
-            Project Deadline
-          </h3>
-          {daysRemaining <= 14 && (
-            <span className="badge badge-yellow flex items-center gap-1">
-              <AlertTriangle size={12} />
-              Approaching
-            </span>
-          )}
-        </div>
-        
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          <div className="flex flex-col">
-            <span className="text-lg font-bold text-gray-800 dark:text-gray-200">
-              {projectData.deadline ? formatDate(projectData.deadline) : 'Not set'}
-            </span>
-            <span className="text-sm text-gray-600 dark:text-gray-400">
-              {daysRemaining > 0 
-                ? `${daysRemaining} days remaining` 
-                : daysRemaining === 0 
-                  ? 'Due today!' 
-                  : 'Overdue'
-              }
-            </span>
+
+      {/* Project Status Overview - Horizontal Layout */}
+      <div className="flex flex-wrap gap-1 mb-1">
+        {/* Project Deadline Section */}
+        <div className="flex-1 p-1 bg-gray-50 dark:bg-slate-800/50 rounded-md border border-gray-200 dark:border-slate-700/50 shadow-sm min-w-[180px]">
+          <div className="flex items-center justify-between mb-1">
+            <h3 className="text-sm font-medium text-gray-700 dark:text-slate-300 flex items-center gap-1.5">
+              <Calendar size={16} className="text-blue-600 dark:text-blue-400" />
+              Project Deadline
+            </h3>
+            {daysRemaining <= 14 && (
+              <span className="badge badge-yellow flex items-center gap-1">
+                <AlertTriangle size={12} />
+                Approaching
+              </span>
+            )}
           </div>
-          
-          <div className="flex items-center gap-2">
+
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex flex-col">
+              <span className="text-lg font-bold text-gray-800 dark:text-slate-200">
+                {projectData.deadline ? formatDate(projectData.deadline) : 'Not set'}
+              </span>
+              <span className="text-sm text-gray-600 dark:text-slate-400">
+                {daysRemaining > 0
+                  ? `${daysRemaining} days remaining`
+                  : daysRemaining === 0
+                    ? 'Due today!'
+                    : 'Overdue'
+                }
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Progress Circle */}
+        <div className="flex-1 p-1 bg-gray-50 dark:bg-gray-800/50 rounded-md border border-gray-200 dark:border-gray-700/50 shadow-sm flex items-center justify-center min-w-[180px]">
+          <div className="flex items-center gap-3">
             <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center relative">
               <svg className="w-16 h-16 transform -rotate-90">
                 <circle
@@ -153,23 +164,23 @@ export default function EnhancedStatusOverview({ tasks = [], projectData = {} })
                   cy="32"
                 />
               </svg>
-              <span className="absolute text-sm font-bold text-gray-800 dark:text-gray-200">
+              <span className="absolute text-sm font-bold text-gray-800 dark:text-slate-200">
                 {percentComplete}%
               </span>
             </div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">
-              <div>Progress</div>
+            <div className="text-sm text-gray-600 dark:text-slate-400">
+              <div className="font-medium">Overall Progress</div>
               <div>{completedTasks} of {totalTasks} tasks</div>
             </div>
           </div>
         </div>
       </div>
-      
-      <div className="grid grid-cols-2 gap-3 mb-5">
+
+      <div className="flex flex-wrap gap-1 mb-1">
         {stats.map((stat, index) => (
-          <div 
-            key={index} 
-            className={`${stat.color} p-3 rounded-xl transition-all duration-200 hover:shadow-md flex items-center gap-2`}
+          <div
+            key={index}
+            className={`${stat.color} p-1 rounded-md transition-all duration-200 shadow-sm hover:shadow-md flex items-center gap-1 border border-gray-200 dark:border-gray-700/30 flex-1 min-w-[100px]`}
           >
             <div className="bg-white dark:bg-gray-800 p-1.5 rounded-full">
               <stat.icon className="w-4 h-4" />
@@ -181,65 +192,86 @@ export default function EnhancedStatusOverview({ tasks = [], projectData = {} })
           </div>
         ))}
       </div>
-      
-      <div className="mb-5">
+
+      <div className="mb-2">
         <div className="flex justify-between items-center mb-2">
-          <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">Overall Progress</h3>
-          <span className="text-sm font-medium text-blue-600 dark:text-blue-400">{percentComplete}%</span>
+          <h3 className="text-sm font-medium text-gray-700 dark:text-slate-300">Progress Timeline</h3>
+          <div className="flex items-center gap-1.5">
+            <span className="text-sm font-medium text-blue-600 dark:text-blue-300">{percentComplete}%</span>
+            {completedTasks > 0 && (
+              <span className="text-xs text-green-600 dark:text-green-400 flex items-center gap-0.5">
+                <TrendingUp size={12} />
+                +{completedTasks} completed
+              </span>
+            )}
+          </div>
         </div>
-        
+
         {/* Interactive progress bar */}
-        <button 
+        <button
           onClick={() => setIsModalOpen(true)}
-          className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5 mb-1 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200 hover:h-3"
+          className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5 mb-1 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200 hover:h-3 relative overflow-hidden"
           aria-label="View detailed task breakdown"
         >
-          <div 
-            className="bg-blue-600 dark:bg-blue-500 h-full rounded-full transition-all duration-500 ease-in-out"
-            style={{ width: `${percentComplete}%` }}
+          <div
+            className="bg-blue-600 dark:bg-blue-500 h-full rounded-full transition-all duration-500 ease-in-out transform origin-left"
+            style={{ width: `${percentComplete > 0 ? percentComplete : 3}%` }}
           ></div>
+          {percentComplete === 0 && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="text-[8px] text-gray-400 dark:text-gray-500 px-1.5">No progress yet</span>
+            </div>
+          )}
         </button>
-        
-        <div className="flex justify-between mt-1 text-xs text-gray-500 dark:text-gray-400">
+
+        <div className="flex justify-between mt-1 text-xs text-gray-500 dark:text-slate-400">
           <span>Started: {projectData.startDate ? formatDate(projectData.startDate) : 'N/A'}</span>
           <span>Deadline: {projectData.deadline ? formatDate(projectData.deadline) : 'N/A'}</span>
         </div>
       </div>
-      
+
       {/* Project Sections */}
-      <div className="mb-2">
-        <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Project Sections</h3>
-        <div className="space-y-3">
+      <div className="mb-1">
+        <h3 className="text-xs font-medium text-gray-700 dark:text-slate-300 mb-1">Project Sections</h3>
+        <div className="flex flex-wrap gap-1">
           {tasksBySection.map(({ section, completedTasks, totalTasks }) => (
             <div key={section} className="flex items-center gap-3">
               <div className={`w-2 h-2 rounded-full ${
                 section === 'UI' ? 'bg-purple-500' :
                 section === 'API' ? 'bg-indigo-500' :
-                section === 'Testing' ? 'bg-emerald-500' : 'bg-gray-500'
+                section === 'Testing' ? 'bg-emerald-500' :
+                section === 'Documentation' ? 'bg-blue-500' :
+                section === 'Security' ? 'bg-red-500' :
+                section === 'Infrastructure' ? 'bg-amber-500' : 'bg-gray-500'
               }`}></div>
-              <span className="text-sm text-gray-700 dark:text-gray-300 flex-1">{section}</span>
-              <div className="w-24 bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
-                <div 
-                  className={`h-full rounded-full ${
+              <span className="text-sm text-gray-700 dark:text-slate-300 flex-1">{section}</span>
+              <div className="w-24 bg-gray-200 dark:bg-gray-700 rounded-full h-1.5 relative overflow-hidden">
+                <div
+                  className={`h-full rounded-full transition-all duration-300 ease-in-out transform origin-left ${
                     section === 'UI' ? 'bg-purple-500' :
                     section === 'API' ? 'bg-indigo-500' :
-                    section === 'Testing' ? 'bg-emerald-500' : 'bg-gray-500'
+                    section === 'Testing' ? 'bg-emerald-500' :
+                    section === 'Documentation' ? 'bg-blue-500' :
+                    section === 'Security' ? 'bg-red-500' :
+                    section === 'Infrastructure' ? 'bg-amber-500' : 'bg-gray-500'
                   }`}
-                  style={{ width: `${totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0}%` }}
+                  style={{ width: `${totalTasks > 0 ? Math.max((completedTasks / totalTasks) * 100, 3) : 3}%` }}
                 ></div>
               </div>
-              <span className="text-xs text-gray-500 dark:text-gray-400 w-16 text-right">
+              <span className="text-xs text-gray-500 dark:text-slate-400 w-16 text-right">
                 {completedTasks}/{totalTasks}
               </span>
             </div>
           ))}
         </div>
       </div>
-      
+
+
+
       {/* Task Breakdown Modal */}
       <AnimatePresence>
         {isModalOpen && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -247,17 +279,17 @@ export default function EnhancedStatusOverview({ tasks = [], projectData = {} })
             className="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 flex items-center justify-center z-50 p-4"
             onClick={() => setIsModalOpen(false)}
           >
-            <motion.div 
+            <motion.div
               initial={{ scale: 0.9, y: 20 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.9, y: 20 }}
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className={`bg-white dark:bg-gray-800 rounded-xl shadow-lg p-5 max-w-2xl w-full max-h-[80vh] overflow-y-auto ${isDarkMode ? 'dark' : ''}`}
+              className={`bg-white dark:bg-slate-800 rounded-xl shadow-lg p-5 max-w-2xl w-full max-h-[80vh] overflow-y-auto border border-gray-100 dark:border-slate-700/50 ${isDarkMode ? 'dark' : ''}`}
               onClick={e => e.stopPropagation()}
             >
               <div className="flex justify-between items-center mb-5">
-                <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Task Breakdown</h2>
-                <button 
+                <h2 className="text-xl font-bold text-gray-900 dark:text-slate-100">Task Breakdown</h2>
+                <button
                   onClick={() => setIsModalOpen(false)}
                   className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 focus:outline-none"
                   aria-label="Close modal"
@@ -265,11 +297,11 @@ export default function EnhancedStatusOverview({ tasks = [], projectData = {} })
                   <X size={20} />
                 </button>
               </div>
-              
+
               <div className="space-y-4">
                 {['To Do', 'In Progress', 'Done'].map(status => (
                   <div key={status} className="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
-                    <button 
+                    <button
                       className={`w-full flex justify-between items-center p-3.5 ${
                         status === 'To Do' ? 'bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300' :
                         status === 'In Progress' ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' :
@@ -289,7 +321,7 @@ export default function EnhancedStatusOverview({ tasks = [], projectData = {} })
                       </div>
                       {expandedSections.includes(status) ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
                     </button>
-                    
+
                     <AnimatePresence>
                       {expandedSections.includes(status) && (
                         <motion.div
@@ -314,7 +346,7 @@ export default function EnhancedStatusOverview({ tasks = [], projectData = {} })
                                 </div>
                                 <p className="text-sm text-gray-600 dark:text-gray-400 mt-1.5">{task.description}</p>
                                 <div className="mt-2 flex justify-between text-xs text-gray-500 dark:text-gray-400">
-                                  <span>Due: {task.due}</span>
+                                  <span>Due: {task.due ? formatDate(task.due) : 'Not set'}</span>
                                   <span>
                                     Section: {task.section}
                                   </span>

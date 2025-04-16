@@ -1,61 +1,94 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { User, CheckCircle, Calendar, Users, Flag, ChevronDown, ChevronUp, Clock, X, Award, Briefcase } from 'lucide-react';
+import { User, CheckCircle, Calendar, Users, Flag, ChevronDown, ChevronUp, Clock, X, Award, Briefcase, Zap, BarChart2, Activity, TrendingUp, Timer, Shield, AlertTriangle, AlertCircle, HelpCircle, FileText, Server } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
+import { format, formatDistanceToNow, isValid, parseISO } from 'date-fns';
 
 export default function EnhancedTeamProgress({ tasks = [] }) {
   const [activeTab, setActiveTab] = useState('Team');
   const [expandedMemberId, setExpandedMemberId] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedMember, setSelectedMember] = useState(null);
+  const [showRiskForm, setShowRiskForm] = useState(false);
+  const [newRisk, setNewRisk] = useState({ title: '', description: '', priority: 'medium' });
   const { isDarkMode } = useTheme();
 
   const teamMembers = [
-    { 
-      id: 1, 
-      name: "Alice", 
-      role: "Project Manager", 
-      avatar: "https://i.pravatar.cc/150?img=1", 
+    {
+      id: 1,
+      name: "Alice",
+      role: "Project Manager",
+      avatar: "https://i.pravatar.cc/150?img=1",
       lastActive: "2025-06-12T14:30:00Z",
-      sections: ["UI", "API", "Testing"],
+      sections: ["UI", "API", "Testing", "Documentation"],
       completedTasks: 5,
       totalTasks: 8
     },
-    { 
-      id: 2, 
-      name: "Bob", 
-      role: "Frontend Developer", 
-      avatar: "https://i.pravatar.cc/150?img=2", 
+    {
+      id: 2,
+      name: "Bob",
+      role: "Frontend Developer",
+      avatar: "https://i.pravatar.cc/150?img=2",
       lastActive: "2025-06-12T16:45:00Z",
       sections: ["UI", "Testing"],
       completedTasks: 12,
       totalTasks: 15
     },
-    { 
-      id: 3, 
-      name: "Charlie", 
-      role: "Backend Developer", 
-      avatar: "https://i.pravatar.cc/150?img=3", 
+    {
+      id: 3,
+      name: "Charlie",
+      role: "Backend Developer",
+      avatar: "https://i.pravatar.cc/150?img=3",
       lastActive: "2025-06-12T13:15:00Z",
       sections: ["API", "Testing"],
       completedTasks: 8,
       totalTasks: 12
+    },
+    {
+      id: 4,
+      name: "Diana",
+      role: "QA Tester",
+      avatar: "https://i.pravatar.cc/150?img=5",
+      lastActive: "2025-06-12T15:20:00Z",
+      sections: ["Testing", "Documentation"],
+      completedTasks: 14,
+      totalTasks: 18
+    },
+    {
+      id: 5,
+      name: "Ethan",
+      role: "SOC Analyst",
+      avatar: "https://i.pravatar.cc/150?img=7",
+      lastActive: "2025-06-12T11:45:00Z",
+      sections: ["Security", "API"],
+      completedTasks: 6,
+      totalTasks: 9
+    },
+    {
+      id: 6,
+      name: "Fiona",
+      role: "DevOps Engineer",
+      avatar: "https://i.pravatar.cc/150?img=9",
+      lastActive: "2025-06-12T10:30:00Z",
+      sections: ["Infrastructure", "Security"],
+      completedTasks: 7,
+      totalTasks: 10
     }
   ];
 
   const stats = [
     { label: "Team Members", value: teamMembers.length, icon: Users, color: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300" },
-    { 
-      label: "Completed Tasks", 
-      value: teamMembers.reduce((sum, member) => sum + member.completedTasks, 0), 
-      icon: CheckCircle, 
-      color: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300" 
+    {
+      label: "Completed Tasks",
+      value: teamMembers.reduce((sum, member) => sum + member.completedTasks, 0),
+      icon: CheckCircle,
+      color: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300"
     },
-    { 
-      label: "Total Tasks", 
-      value: teamMembers.reduce((sum, member) => sum + member.totalTasks, 0), 
-      icon: Calendar, 
-      color: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300" 
+    {
+      label: "Total Tasks",
+      value: teamMembers.reduce((sum, member) => sum + member.totalTasks, 0),
+      icon: Calendar,
+      color: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300"
     }
   ];
 
@@ -103,20 +136,24 @@ export default function EnhancedTeamProgress({ tasks = [] }) {
 
   // Format date to relative time (e.g., "2 hours ago")
   const formatRelativeTime = (dateString) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffMs = now - date;
-    const diffSec = Math.round(diffMs / 1000);
-    const diffMin = Math.round(diffSec / 60);
-    const diffHour = Math.round(diffMin / 60);
-    const diffDay = Math.round(diffHour / 24);
+    try {
+      const date = parseISO(dateString);
+      if (!isValid(date)) return 'Invalid date';
 
-    if (diffSec < 60) return `${diffSec} seconds ago`;
-    if (diffMin < 60) return `${diffMin} minutes ago`;
-    if (diffHour < 24) return `${diffHour} hours ago`;
-    if (diffDay < 30) return `${diffDay} days ago`;
-    
-    return date.toLocaleDateString();
+      // For dates within a month, use relative time
+      const now = new Date();
+      const diffInDays = Math.abs(Math.floor((now - date) / (1000 * 60 * 60 * 24)));
+
+      if (diffInDays < 30) {
+        return formatDistanceToNow(date, { addSuffix: true });
+      } else {
+        // For dates further away, use a more readable format
+        return format(date, 'MMM d, yyyy');
+      }
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return 'Invalid date';
+    }
   };
 
   const getSectionColor = (section) => {
@@ -127,6 +164,12 @@ export default function EnhancedTeamProgress({ tasks = [] }) {
         return 'badge-indigo';
       case 'Testing':
         return 'badge-emerald';
+      case 'Documentation':
+        return 'badge-blue';
+      case 'Security':
+        return 'badge-red';
+      case 'Infrastructure':
+        return 'badge-yellow';
       default:
         return 'badge-blue';
     }
@@ -134,16 +177,16 @@ export default function EnhancedTeamProgress({ tasks = [] }) {
 
   return (
     <div className="card">
-      <div className="card-header">
-        <h2 className="section-title">Team Progress</h2>
+      <div className="card-header mb-1">
+        <h2 className="section-title text-sm">Team Progress</h2>
       </div>
 
-      <div className="flex space-x-2 mb-5 border-b border-gray-200 dark:border-gray-700">
+      <div className="flex space-x-1 mb-1 border-b border-gray-200 dark:border-gray-700">
         {['Team', 'Milestones'].map(tab => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`px-3 py-2 font-medium rounded-t-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+            className={`px-2 py-1 text-xs font-medium rounded-t-md transition-colors focus:outline-none ${
               activeTab === tab
                 ? `border-b-2 border-blue-600 text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20`
                 : `text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/10`
@@ -155,11 +198,11 @@ export default function EnhancedTeamProgress({ tasks = [] }) {
         ))}
       </div>
 
-      <div className="grid grid-cols-2 gap-3 mb-5">
+      <div className="grid grid-cols-2 gap-4 mb-6">
         {stats.map(({ label, value, icon: Icon, color }) => (
           <div
             key={label}
-            className={`${color} p-3 rounded-xl transition-all duration-200 hover:shadow-md flex items-center gap-2`}
+            className={`${color} p-4 rounded-xl transition-all duration-200 shadow-sm hover:shadow-md flex items-center gap-2 border border-gray-100 dark:border-gray-700/30`}
             title={label}
             tabIndex={0}
             aria-label={`${label}: ${value}`}
@@ -176,108 +219,281 @@ export default function EnhancedTeamProgress({ tasks = [] }) {
       </div>
 
       {activeTab === 'Team' && (
-        <ul className="space-y-3">
-          {teamMembers.map((member) => (
-            <li key={member.id}>
-              <div 
-                className={`flex items-center gap-3 p-3 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow cursor-pointer ${
-                  expandedMemberId === member.id ? 'bg-blue-50 dark:bg-blue-900/20' : 'bg-white dark:bg-gray-800'
-                }`}
-                onClick={() => toggleMemberExpand(member.id)}
-              >
-                <img
-                  src={member.avatar}
-                  alt={`${member.name}'s avatar`}
-                  className="w-10 h-10 rounded-full object-cover"
-                  onError={(e) => {
-                    e.currentTarget.onerror = null;
-                    e.currentTarget.src = 'https://via.placeholder.com/40?text=User';
-                  }}
-                />
-                <div className="flex-1 min-w-0">
-                  <div className="flex justify-between items-center">
-                    <span className="font-semibold text-gray-900 dark:text-gray-100 truncate">{member.name}</span>
-                    <div className="flex items-center gap-1 ml-2">
-                      <span className="text-xs text-gray-500 dark:text-gray-400 hidden sm:inline">
-                        {formatRelativeTime(member.lastActive)}
-                      </span>
-                      {expandedMemberId === member.id ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+        <div className="flex flex-col h-full">
+          <div className="flex flex-wrap gap-1 mb-1">
+            {/* Risks & Blockers Section */}
+            <div className="bg-gray-50 dark:bg-slate-800/50 rounded-md p-1 border border-gray-200 dark:border-slate-700/50 shadow-sm flex-1 min-w-[180px]">
+              <div className="flex items-center justify-between mb-1">
+                <h3 className="text-sm font-medium text-gray-700 dark:text-slate-300 flex items-center gap-1.5">
+                  <Shield size={16} className="text-red-500 dark:text-red-400" />
+                  Risks & Blockers
+                </h3>
+                <span className="text-xs bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 px-2.5 py-1 rounded-full">
+                  2 Active
+                </span>
+              </div>
+
+              <ul className="space-y-1">
+                <li className="p-1 bg-white dark:bg-slate-700/30 rounded-md border border-gray-100 dark:border-slate-700/50 shadow-sm hover:shadow-md transition-all">
+                  <div className="flex items-start gap-3">
+                    <div className="mt-0.5 flex-shrink-0 bg-amber-100 dark:bg-amber-900/30 p-1.5 rounded-lg">
+                      <AlertTriangle size={16} className="text-amber-500 dark:text-amber-400" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between">
+                        <h4 className="text-sm font-medium text-gray-800 dark:text-slate-200">API Integration Delay</h4>
+                        <span className="text-xs px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-full">Medium</span>
+                      </div>
+                      <p className="text-xs text-gray-600 dark:text-slate-400 mt-1.5">Third-party API documentation is incomplete, causing integration delays.</p>
+                      <div className="flex items-center justify-between mt-3">
+                        <span className="text-xs text-gray-500 dark:text-slate-500 flex items-center gap-1">
+                          <User size={12} />
+                          Reported by: Bob
+                        </span>
+                        <button className="text-xs text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1">
+                          <HelpCircle size={12} />
+                          Details
+                        </button>
+                      </div>
                     </div>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-1">
-                      <Briefcase size={12} />
-                      {member.role}
-                    </span>
-                    <span className="text-xs text-blue-600 dark:text-blue-400 font-medium">
-                      {Math.round((member.completedTasks / member.totalTasks) * 100)}%
-                    </span>
+                </li>
+              </ul>
+
+              {!showRiskForm ? (
+                <button
+                  onClick={() => setShowRiskForm(true)}
+                  className="w-full mt-2 py-1.5 text-xs text-center text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-800/30 hover:shadow-sm active:scale-98 transition-all"
+                >
+                  + Report New Issue
+                </button>
+              ) : (
+                <div className="mt-2 p-1 bg-white dark:bg-slate-700/30 rounded-md border border-gray-100 dark:border-slate-700/50 shadow-sm">
+                  <input
+                    type="text"
+                    placeholder="Issue title"
+                    className="w-full p-1 mb-1 text-xs bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-md"
+                    value={newRisk.title}
+                    onChange={(e) => setNewRisk({...newRisk, title: e.target.value})}
+                  />
+                  <textarea
+                    placeholder="Brief description"
+                    className="w-full p-1 mb-1 text-xs bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-md"
+                    rows="2"
+                    value={newRisk.description}
+                    onChange={(e) => setNewRisk({...newRisk, description: e.target.value})}
+                  />
+                  <div className="flex justify-between items-center mb-1">
+                    <select
+                      className="p-1 text-xs bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-md"
+                      value={newRisk.priority}
+                      onChange={(e) => setNewRisk({...newRisk, priority: e.target.value})}
+                    >
+                      <option value="low">Low Priority</option>
+                      <option value="medium">Medium Priority</option>
+                      <option value="high">High Priority</option>
+                    </select>
+                  </div>
+                  <div className="flex gap-1">
+                    <button
+                      onClick={() => {
+                        // Here you would normally add the risk to your data
+                        console.log('New risk:', newRisk);
+                        setNewRisk({ title: '', description: '', priority: 'medium' });
+                        setShowRiskForm(false);
+                      }}
+                      className="flex-1 py-1 text-xs text-center text-white bg-blue-600 hover:bg-blue-700 rounded-md hover:shadow-sm active:scale-98 transition-all"
+                    >
+                      Add
+                    </button>
+                    <button
+                      onClick={() => setShowRiskForm(false)}
+                      className="flex-1 py-1 text-xs text-center text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 rounded-md hover:shadow-sm active:scale-98 transition-all"
+                    >
+                      Cancel
+                    </button>
                   </div>
                 </div>
+              )}
+            </div>
+
+            {/* Task Efficiency Section */}
+            <div className="bg-gray-50 dark:bg-slate-800/50 rounded-md p-1 border border-gray-200 dark:border-slate-700/50 shadow-sm flex-1 min-w-[180px]">
+              <div className="flex items-center justify-between mb-1">
+                <h3 className="text-sm font-medium text-gray-700 dark:text-slate-300 flex items-center gap-1.5">
+                  <Activity size={16} className="text-blue-500 dark:text-blue-400" />
+                  Task Efficiency
+                </h3>
+                <div className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400">
+                  <TrendingUp size={12} />
+                  +15% this week
+                </div>
               </div>
-              
-              <AnimatePresence>
-                {expandedMemberId === member.id && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.2 }}
-                    className="overflow-hidden"
-                  >
-                    <div className="mt-2 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl border border-gray-200 dark:border-gray-700">
-                      <div className="flex flex-wrap gap-1.5 mb-3">
-                        {member.sections.map(section => (
-                          <span 
-                            key={section} 
-                            className={`badge ${getSectionColor(section)}`}
-                          >
-                            {section}
-                          </span>
-                        ))}
-                      </div>
-                      
-                      <div className="mb-3">
-                        <div className="flex justify-between items-center mb-1">
-                          <span className="text-xs text-gray-600 dark:text-gray-400">
-                            {member.completedTasks} of {member.totalTasks} tasks
-                          </span>
-                          <span className="text-xs font-medium text-blue-600 dark:text-blue-400">
-                            {Math.round((member.completedTasks / member.totalTasks) * 100)}%
-                          </span>
-                        </div>
-                        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
-                          <div 
-                            className="bg-blue-600 dark:bg-blue-500 h-full rounded-full transition-all duration-500 ease-in-out"
-                            style={{ width: `${(member.completedTasks / member.totalTasks) * 100}%` }}
-                          ></div>
-                        </div>
-                      </div>
-                      
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          openMemberModal(member);
-                        }}
-                        className="w-full py-1.5 text-sm text-center bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
-                      >
-                        View Details
-                      </button>
+
+              <div className="flex flex-wrap gap-1 mb-1">
+                <div className="bg-white dark:bg-slate-700/30 p-1 rounded-md border border-gray-200 dark:border-slate-700/50 shadow-sm flex flex-col items-center justify-center flex-1 min-w-[60px]">
+                  <div className="text-lg font-bold text-gray-800 dark:text-slate-200">12</div>
+                  <div className="text-xs text-gray-600 dark:text-slate-400 text-center">Tasks</div>
+                </div>
+
+                <div className="bg-white dark:bg-slate-700/30 p-1 rounded-md border border-gray-200 dark:border-slate-700/50 shadow-sm flex flex-col items-center justify-center flex-1 min-w-[60px]">
+                  <div className="text-lg font-bold text-gray-800 dark:text-slate-200 flex items-center gap-1">
+                    <Timer size={14} className="text-blue-500" />
+                    2.3
+                  </div>
+                  <div className="text-xs text-gray-600 dark:text-slate-400 text-center">Days Avg.</div>
+                </div>
+
+                <div className="bg-white dark:bg-slate-700/30 p-1 rounded-md border border-gray-200 dark:border-slate-700/50 shadow-sm flex flex-col items-center justify-center flex-1 min-w-[60px]">
+                  <div className="text-lg font-bold text-gray-800 dark:text-slate-200">85%</div>
+                  <div className="text-xs text-gray-600 dark:text-slate-400 text-center">On-Time</div>
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <h4 className="text-xs font-medium text-gray-700 dark:text-slate-300 mb-1">Section Performance</h4>
+                {[
+                  { section: 'UI', completed: 8, total: 10, icon: <Zap size={14} className="text-purple-500" /> },
+                  { section: 'API', completed: 6, total: 8, icon: <BarChart2 size={14} className="text-indigo-500" /> },
+                  { section: 'Testing', completed: 4, total: 7, icon: <CheckCircle size={14} className="text-emerald-500" /> },
+                  { section: 'Documentation', completed: 5, total: 6, icon: <FileText size={14} className="text-blue-500" /> },
+                  { section: 'Security', completed: 3, total: 5, icon: <Shield size={14} className="text-red-500" /> },
+                  { section: 'Infrastructure', completed: 4, total: 6, icon: <Server size={14} className="text-amber-500" /> }
+                ].map((item) => (
+                  <div key={item.section} className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5 w-16">
+                      {item.icon}
+                      <span className="text-xs font-medium text-gray-700 dark:text-slate-300">{item.section}</span>
                     </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </li>
-          ))}
-        </ul>
+                    <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-1.5 relative overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all duration-300 ease-in-out ${
+                          item.section === 'UI' ? 'bg-purple-500' :
+                          item.section === 'API' ? 'bg-indigo-500' :
+                          item.section === 'Testing' ? 'bg-emerald-500' :
+                          item.section === 'Documentation' ? 'bg-blue-500' :
+                          item.section === 'Security' ? 'bg-red-500' :
+                          item.section === 'Infrastructure' ? 'bg-amber-500' :
+                          'bg-gray-500'
+                        }`}
+                        style={{ width: `${Math.round((item.completed / item.total) * 100)}%` }}
+                      ></div>
+                    </div>
+                    <span className="text-xs font-medium text-gray-700 dark:text-slate-300 w-12 text-right">
+                      {Math.round((item.completed / item.total) * 100)}%
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex-1 overflow-auto">
+            <h3 className="text-xs font-medium text-gray-700 dark:text-slate-300 mb-1">Team Members</h3>
+            <ul className="space-y-1">
+              {teamMembers.map((member) => (
+                <li key={member.id}>
+                  <div
+                    className={`flex items-center gap-1 p-1 rounded-md border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow cursor-pointer h-full ${
+                      expandedMemberId === member.id ? 'bg-blue-50 dark:bg-blue-900/20' : 'bg-white dark:bg-gray-800'
+                    }`}
+                    onClick={() => toggleMemberExpand(member.id)}
+                  >
+                    <img
+                      src={member.avatar}
+                      alt={`${member.name}'s avatar`}
+                      className="w-10 h-10 rounded-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src = 'https://via.placeholder.com/40?text=User';
+                      }}
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-center">
+                        <span className="font-semibold text-gray-900 dark:text-gray-100 truncate">{member.name}</span>
+                        <div className="flex items-center gap-1 ml-2">
+                          <span className="text-xs text-gray-500 dark:text-gray-400 hidden sm:inline">
+                            {formatRelativeTime(member.lastActive)}
+                          </span>
+                          {expandedMemberId === member.id ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-1">
+                          <Briefcase size={12} />
+                          {member.role}
+                        </span>
+                        <span className="text-xs text-blue-600 dark:text-blue-400 font-medium">
+                          {Math.round((member.completedTasks / member.totalTasks) * 100)}%
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <AnimatePresence>
+                    {expandedMemberId === member.id && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="overflow-hidden"
+                      >
+                        <div className="mt-2 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
+                          <div className="flex flex-wrap gap-1.5 mb-3">
+                            {member.sections.map(section => (
+                              <span
+                                key={section}
+                                className={`badge ${getSectionColor(section)}`}
+                              >
+                                {section}
+                              </span>
+                            ))}
+                          </div>
+
+                          <div className="mb-3">
+                            <div className="flex justify-between items-center mb-1">
+                              <span className="text-xs text-gray-600 dark:text-gray-400">
+                                {member.completedTasks} of {member.totalTasks} tasks
+                              </span>
+                              <span className="text-xs font-medium text-blue-600 dark:text-blue-400">
+                                {Math.round((member.completedTasks / member.totalTasks) * 100)}%
+                              </span>
+                            </div>
+                            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
+                              <div
+                                className="bg-blue-600 dark:bg-blue-500 h-full rounded-full transition-all duration-500 ease-in-out"
+                                style={{ width: `${(member.completedTasks / member.totalTasks) * 100}%` }}
+                              ></div>
+                            </div>
+                          </div>
+
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openMemberModal(member);
+                            }}
+                            className="w-full py-1.5 text-sm text-center bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+                          >
+                            View Details
+                          </button>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
       )}
 
       {activeTab === 'Milestones' && (
-        <ul className="space-y-3">
+        <ul className="space-y-4">
           {milestones.map(({ id, title, date, description }) => (
-            <li 
-              key={id} 
-              className="p-3 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow bg-white dark:bg-gray-800"
+            <li
+              key={id}
+              className="p-5 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-md hover:shadow-lg transition-shadow bg-white dark:bg-gray-800"
             >
               <div className="flex items-center gap-2 mb-1.5">
                 <Flag size={16} className="text-amber-600 dark:text-amber-500" />
@@ -291,7 +507,7 @@ export default function EnhancedTeamProgress({ tasks = [] }) {
           ))}
         </ul>
       )}
-      
+
       {/* Team Member Details Modal */}
       <AnimatePresence>
         {modalOpen && selectedMember && (
@@ -308,7 +524,7 @@ export default function EnhancedTeamProgress({ tasks = [] }) {
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.9, y: 20 }}
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className={`bg-white dark:bg-gray-800 rounded-xl p-5 w-full max-w-2xl shadow-lg ${isDarkMode ? 'dark' : ''}`}
+              className={`bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-2xl shadow-lg border border-gray-100 dark:border-gray-700/50 ${isDarkMode ? 'dark' : ''}`}
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex justify-between items-start mb-5">
@@ -338,9 +554,9 @@ export default function EnhancedTeamProgress({ tasks = [] }) {
                   <X size={20} />
                 </button>
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
-                <div className="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-xl">
+                <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-xl shadow-sm">
                   <div className="flex items-center gap-2 mb-2">
                     <CheckCircle size={16} className="text-green-600 dark:text-green-500" />
                     <h3 className="font-semibold text-gray-800 dark:text-gray-200">Recently Completed</h3>
@@ -350,7 +566,7 @@ export default function EnhancedTeamProgress({ tasks = [] }) {
                       getRecentlyCompletedTasks(selectedMember.id).map(task => (
                         <li key={task.id} className="p-2 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
                           <div className="font-medium text-gray-800 dark:text-gray-200 text-sm">{task.title}</div>
-                          <div className="text-xs text-gray-500 dark:text-gray-400">Completed: {task.completedDate || task.due}</div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400">Completed: {task.completedDate ? format(new Date(task.completedDate), 'MMM d, yyyy') : (task.due ? format(new Date(task.due), 'MMM d, yyyy') : 'Not set')}</div>
                         </li>
                       ))
                     ) : (
@@ -358,8 +574,8 @@ export default function EnhancedTeamProgress({ tasks = [] }) {
                     )}
                   </ul>
                 </div>
-                
-                <div className="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-xl">
+
+                <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-xl shadow-sm">
                   <div className="flex items-center gap-2 mb-2">
                     <Clock size={16} className="text-blue-600 dark:text-blue-500" />
                     <h3 className="font-semibold text-gray-800 dark:text-gray-200">Current Tasks</h3>
@@ -377,7 +593,7 @@ export default function EnhancedTeamProgress({ tasks = [] }) {
                             }`}>
                               {task.priority}
                             </span>
-                            <span className="text-xs text-gray-500 dark:text-gray-400">Due: {task.due}</span>
+                            <span className="text-xs text-gray-500 dark:text-gray-400">Due: {task.due ? format(new Date(task.due), 'MMM d, yyyy') : 'Not set'}</span>
                           </div>
                         </li>
                       ))
@@ -387,20 +603,20 @@ export default function EnhancedTeamProgress({ tasks = [] }) {
                   </ul>
                 </div>
               </div>
-              
+
               <div>
                 <h3 className="font-semibold text-gray-800 dark:text-gray-200 mb-2">Assigned Sections</h3>
                 <div className="flex flex-wrap gap-2 mb-4">
                   {selectedMember.sections.map(section => (
-                    <span 
-                      key={section} 
+                    <span
+                      key={section}
                       className={`badge ${getSectionColor(section)}`}
                     >
                       {section}
                     </span>
                   ))}
                 </div>
-                
+
                 <div className="mt-4">
                   <h3 className="font-semibold text-gray-800 dark:text-gray-200 mb-2">Overall Progress</h3>
                   <div className="flex justify-between items-center mb-1">
@@ -412,13 +628,13 @@ export default function EnhancedTeamProgress({ tasks = [] }) {
                     </span>
                   </div>
                   <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                    <div 
+                    <div
                       className="bg-blue-600 dark:bg-blue-500 h-full rounded-full transition-all duration-500 ease-in-out"
                       style={{ width: `${(selectedMember.completedTasks / selectedMember.totalTasks) * 100}%` }}
                     ></div>
                   </div>
                 </div>
-                
+
                 <div className="mt-4 text-sm text-gray-600 dark:text-gray-400">
                   <div className="flex items-center gap-1.5">
                     <Clock size={14} />

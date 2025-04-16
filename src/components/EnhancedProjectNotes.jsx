@@ -30,14 +30,14 @@ export default function EnhancedProjectNotes({ initialNotes = [] }) {
       author: 'Alice'
     }
   ]);
-  
+
   const [expandedCategories, setExpandedCategories] = useState(['design', 'backend', 'meeting']);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalContent, setModalContent] = useState('');
   const [modalTitle, setModalTitle] = useState('');
   const [modalCategory, setModalCategory] = useState('design');
   const [editingNoteId, setEditingNoteId] = useState(null);
-  
+
   const { isDarkMode } = useTheme();
 
   const categories = [
@@ -77,18 +77,18 @@ export default function EnhancedProjectNotes({ initialNotes = [] }) {
       // You could add a toast notification here
       return;
     }
-    
+
     if (editingNoteId !== null) {
       setNotes(prevNotes =>
         prevNotes.map(note =>
-          note.id === editingNoteId 
-            ? { 
-                ...note, 
-                content: modalContent, 
+          note.id === editingNoteId
+            ? {
+                ...note,
+                content: modalContent,
                 title: modalTitle,
                 category: modalCategory,
                 date: new Date().toISOString().split('T')[0] // Update date on edit
-              } 
+              }
             : note
         )
       );
@@ -107,29 +107,28 @@ export default function EnhancedProjectNotes({ initialNotes = [] }) {
   };
 
   return (
-    <div className="card">
-      <div className="card-header">
-        <h2 className="section-title">Project Notes</h2>
-        <button 
+    <section className="card" aria-label="Project Notes">
+      <div className="card-header mb-1">
+        <h2 className="section-title text-sm">Project Notes</h2>
+        <button
           onClick={() => openAddModal('design')}
-          className="btn btn-primary flex items-center gap-1.5"
+          className="px-2 py-1 text-xs bg-blue-600 text-white rounded-md flex items-center gap-1 active:scale-95 transition-all"
           aria-label="Add new note"
         >
-          <Plus size={16} />
-          <span className="hidden sm:inline">Add Note</span>
-          <span className="sm:hidden">Add</span>
+          <Plus size={14} />
+          <span>Add</span>
         </button>
       </div>
 
-      <div className="space-y-3">
+      <div className="flex flex-col gap-1">
         {categories.map(category => {
           const categoryNotes = notes.filter(note => note.category === category.id);
           const isExpanded = expandedCategories.includes(category.id);
-          
+
           return (
-            <div key={category.id} className="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden transition-shadow duration-200 hover:shadow-md">
+            <div key={category.id} className="border border-gray-200 dark:border-gray-700 rounded-md overflow-hidden transition-shadow duration-200 hover:shadow-md note-category flex-1">
               <button
-                className={`w-full flex justify-between items-center p-3 ${category.bgColor} hover:bg-opacity-80 dark:hover:bg-opacity-80 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-200`}
+                className={`w-full flex justify-between items-center p-1 ${category.bgColor} hover:bg-opacity-80 dark:hover:bg-opacity-80 focus:outline-none transition-colors duration-200`}
                 onClick={() => toggleCategory(category.id)}
                 aria-expanded={isExpanded}
                 aria-controls={`category-content-${category.id}`}
@@ -155,7 +154,7 @@ export default function EnhancedProjectNotes({ initialNotes = [] }) {
                   {isExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
                 </div>
               </button>
-              
+
               <AnimatePresence>
                 {isExpanded && (
                   <motion.div
@@ -167,9 +166,9 @@ export default function EnhancedProjectNotes({ initialNotes = [] }) {
                     className="overflow-hidden"
                   >
                     {categoryNotes.length > 0 ? (
-                      <div className="divide-y divide-gray-200 dark:divide-gray-700">
+                      <div className="flex flex-wrap gap-1 p-1">
                         {categoryNotes.map(note => (
-                          <div key={note.id} className="p-3 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-200 group">
+                          <div key={note.id} className="p-1 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-200 group min-h-[70px] flex flex-col shadow-sm hover:shadow-md rounded-md border border-gray-200 dark:border-gray-700 flex-1 min-w-[150px]">
                             <div className="flex justify-between items-start">
                               <h3 className="font-medium text-gray-800 dark:text-gray-200">{note.title}</h3>
                               <button
@@ -180,8 +179,8 @@ export default function EnhancedProjectNotes({ initialNotes = [] }) {
                                 <Edit2 size={14} />
                               </button>
                             </div>
-                            <p className="mt-1.5 text-gray-600 dark:text-gray-400 text-sm whitespace-pre-wrap line-clamp-3">{note.content}</p>
-                            <div className="mt-2 flex justify-between text-xs text-gray-500 dark:text-gray-400">
+                            <p className="mt-2 text-gray-600 dark:text-gray-400 text-sm whitespace-pre-wrap line-clamp-3 flex-grow">{note.content}</p>
+                            <div className="mt-3 flex justify-between text-xs text-gray-500 dark:text-gray-400 pt-2 border-t border-gray-100 dark:border-gray-700">
                               <span>{note.date}</span>
                               <span>{note.author}</span>
                             </div>
@@ -189,8 +188,19 @@ export default function EnhancedProjectNotes({ initialNotes = [] }) {
                         ))}
                       </div>
                     ) : (
-                      <div className="p-3 text-center text-gray-500 dark:text-gray-400 italic">
-                        No notes in this category yet
+                      <div className="p-6 text-center">
+                        <div className="mb-2 text-gray-400 dark:text-gray-500">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                          </svg>
+                        </div>
+                        <p className="text-gray-500 dark:text-gray-400 mb-1">No notes in this category yet</p>
+                        <button
+                          onClick={() => openAddModal(category.id)}
+                          className="text-sm text-blue-600 dark:text-blue-400 hover:underline focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-md px-2 py-1 transition-colors"
+                        >
+                          + Add a note
+                        </button>
                       </div>
                     )}
                   </motion.div>
@@ -220,7 +230,7 @@ export default function EnhancedProjectNotes({ initialNotes = [] }) {
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.9, y: 20 }}
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className={`bg-white dark:bg-gray-800 rounded-xl p-5 w-full max-w-lg shadow-lg ${isDarkMode ? 'dark' : ''}`}
+              className={`bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-lg shadow-lg border border-gray-100 dark:border-gray-700/50 ${isDarkMode ? 'dark' : ''}`}
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex justify-between items-center mb-4">
@@ -235,7 +245,7 @@ export default function EnhancedProjectNotes({ initialNotes = [] }) {
                   <X size={20} />
                 </button>
               </div>
-              
+
               <div className="space-y-4">
                 <div>
                   <label className="block mb-1.5 font-medium text-gray-700 dark:text-gray-300">
@@ -253,7 +263,7 @@ export default function EnhancedProjectNotes({ initialNotes = [] }) {
                     </select>
                   </label>
                 </div>
-                
+
                 <div>
                   <label className="block mb-1.5 font-medium text-gray-700 dark:text-gray-300">
                     Title
@@ -266,7 +276,7 @@ export default function EnhancedProjectNotes({ initialNotes = [] }) {
                     />
                   </label>
                 </div>
-                
+
                 <div>
                   <label className="block mb-1.5 font-medium text-gray-700 dark:text-gray-300">
                     Content
@@ -280,7 +290,7 @@ export default function EnhancedProjectNotes({ initialNotes = [] }) {
                   </label>
                 </div>
               </div>
-              
+
               <div className="flex justify-end gap-3 mt-5">
                 <button
                   type="button"
@@ -292,7 +302,7 @@ export default function EnhancedProjectNotes({ initialNotes = [] }) {
                 <button
                   type="button"
                   onClick={saveModalContent}
-                  className="btn btn-primary flex items-center gap-1.5"
+                  className="btn btn-primary flex items-center gap-1.5 active:scale-95 transition-all"
                 >
                   <Save size={16} />
                   Save
@@ -302,6 +312,6 @@ export default function EnhancedProjectNotes({ initialNotes = [] }) {
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+    </section>
   );
 }

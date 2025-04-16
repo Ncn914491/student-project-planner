@@ -9,109 +9,173 @@ import EnhancedTaskBoard from './components/EnhancedTaskBoard';
 import EnhancedProjectNotes from './components/EnhancedProjectNotes';
 import EnhancedStatusOverview from './components/EnhancedStatusOverview';
 import EnhancedTeamProgress from './components/EnhancedTeamProgress';
+import QuickLinksComponent from './components/QuickLinksComponent';
 
 // Project data
 const projectData = {
   name: "Project Planner",
   startDate: "2025-05-01",
-  deadline: "2025-07-15",
-  description: "A comprehensive project management tool for teams"
+  deadline: "2025-04-25",
+  description: "A comprehensive project management tool for teams",
+  logo: "/logo.svg"
 };
 
 // Sample data
 const sampleTasks = [
-  { 
-    id: 1, 
-    title: "Design user dashboard", 
-    description: "Create wireframes and mockups for the main dashboard", 
-    status: "To Do", 
+  {
+    id: 1,
+    title: "Design user dashboard",
+    description: "Create wireframes and mockups for the main dashboard",
+    status: "Done",
     priority: "high",
     due: "2025-06-15",
+    completedDate: "2025-06-14",
     assignee: 4, // Dana (UI/UX Designer)
     section: "UI"
   },
-  { 
-    id: 2, 
-    title: "Implement API endpoints", 
-    description: "Create RESTful API endpoints for user authentication", 
-    status: "In Progress", 
+  {
+    id: 2,
+    title: "Implement API endpoints",
+    description: "Create RESTful API endpoints for user authentication",
+    status: "In Progress",
     priority: "medium",
     due: "2025-06-20",
     assignee: 3, // Charlie (Backend Developer)
     section: "API"
   },
-  { 
-    id: 3, 
-    title: "Write unit tests", 
-    description: "Create comprehensive test suite for core functionality", 
-    status: "Done", 
+  {
+    id: 3,
+    title: "Write unit tests",
+    description: "Create comprehensive test suite for core functionality",
+    status: "Done",
     priority: "low",
     due: "2025-06-10",
     completedDate: "2025-06-09",
     assignee: 2, // Bob (Frontend Developer)
     section: "Testing"
   },
-  { 
-    id: 4, 
-    title: "Fix responsive layout", 
-    description: "Ensure the application works well on mobile devices", 
-    status: "In Progress", 
+  {
+    id: 4,
+    title: "Fix responsive layout",
+    description: "Ensure the application works well on mobile devices",
+    status: "In Progress",
     priority: "high",
     due: "2025-06-18",
     assignee: 2, // Bob (Frontend Developer)
     section: "UI"
   },
-  { 
-    id: 5, 
-    title: "Database optimization", 
-    description: "Improve query performance for large datasets", 
-    status: "To Do", 
+  {
+    id: 5,
+    title: "Database optimization",
+    description: "Improve query performance for large datasets",
+    status: "To Do",
     priority: "medium",
     due: "2025-06-25",
     assignee: 3, // Charlie (Backend Developer)
     section: "API"
   },
-  { 
-    id: 6, 
-    title: "User acceptance testing", 
-    description: "Coordinate UAT with stakeholders", 
-    status: "To Do", 
+  {
+    id: 6,
+    title: "User acceptance testing",
+    description: "Coordinate UAT with stakeholders",
+    status: "To Do",
     priority: "high",
     due: "2025-06-30",
     assignee: 1, // Alice (Project Manager)
     section: "Testing"
   },
-  { 
-    id: 7, 
-    title: "Create user documentation", 
-    description: "Write comprehensive user guide", 
-    status: "Done", 
+  {
+    id: 7,
+    title: "Create user documentation",
+    description: "Write comprehensive user guide",
+    status: "Done",
     priority: "medium",
     due: "2025-06-05",
     completedDate: "2025-06-04",
     assignee: 1, // Alice (Project Manager)
     section: "UI"
   },
-  { 
-    id: 8, 
-    title: "Implement authentication", 
-    description: "Add OAuth2 authentication flow", 
-    status: "Done", 
+  {
+    id: 8,
+    title: "Implement authentication",
+    description: "Add OAuth2 authentication flow",
+    status: "Done",
     priority: "high",
     due: "2025-06-08",
     completedDate: "2025-06-07",
     assignee: 3, // Charlie (Backend Developer)
     section: "API"
   },
-  { 
-    id: 9, 
-    title: "Design system integration", 
-    description: "Ensure all components follow the design system", 
-    status: "In Progress", 
+  {
+    id: 9,
+    title: "Design system integration",
+    description: "Ensure all components follow the design system",
+    status: "In Progress",
     priority: "medium",
     due: "2025-06-22",
     assignee: 4, // Dana (UI/UX Designer)
     section: "UI"
+  },
+  {
+    id: 10,
+    title: "Security audit",
+    description: "Perform comprehensive security audit of the application",
+    status: "In Progress",
+    priority: "high",
+    due: "2025-06-28",
+    assignee: 5, // Ethan (SOC Analyst)
+    section: "Security"
+  },
+  {
+    id: 11,
+    title: "API documentation",
+    description: "Create comprehensive API documentation for developers",
+    status: "To Do",
+    priority: "medium",
+    due: "2025-07-05",
+    assignee: 3, // Charlie (Backend Developer)
+    section: "Documentation"
+  },
+  {
+    id: 12,
+    title: "CI/CD pipeline setup",
+    description: "Configure automated deployment pipeline",
+    status: "In Progress",
+    priority: "high",
+    due: "2025-06-25",
+    assignee: 6, // Fiona (DevOps Engineer)
+    section: "Infrastructure"
+  },
+  {
+    id: 13,
+    title: "User manual",
+    description: "Create end-user documentation and help guides",
+    status: "To Do",
+    priority: "low",
+    due: "2025-07-10",
+    assignee: 4, // Diana (QA Tester)
+    section: "Documentation"
+  },
+  {
+    id: 14,
+    title: "Penetration testing",
+    description: "Conduct penetration testing to identify vulnerabilities",
+    status: "Done",
+    priority: "high",
+    due: "2025-07-05",
+    completedDate: "2025-07-03",
+    assignee: 5, // Ethan (SOC Analyst)
+    section: "Security"
+  },
+  {
+    id: 15,
+    title: "Server scaling",
+    description: "Configure auto-scaling for production servers",
+    status: "To Do",
+    priority: "medium",
+    due: "2025-07-15",
+    assignee: 6, // Fiona (DevOps Engineer)
+    section: "Infrastructure"
   }
 ];
 
@@ -145,25 +209,36 @@ const sampleNotes = [
 // Main App component
 function App() {
   const { isDarkMode } = useTheme();
-  
+
   return (
-    <div className={`h-screen w-full overflow-auto bg-gray-50 dark:bg-gray-900 transition-colors duration-200 ${isDarkMode ? 'dark' : ''}`}>
-      <div className="container mx-auto px-4 py-4 md:py-6 max-w-screen-xl">
+    <div className={`min-h-screen w-full overflow-auto bg-gray-50 dark:bg-slate-900 transition-colors duration-200 ${isDarkMode ? 'dark' : ''}`}>
+      <div className="container mx-auto px-0 py-0 max-w-screen-xl">
         <EnhancedHeader projectData={projectData} />
-        
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6">
-          {/* Main content area - 8/12 on large screens */}
-          <div className="lg:col-span-8 space-y-4 md:space-y-6">
+
+        <div className="flex flex-wrap">
+          {/* Main task board */}
+          <div className="w-full lg:w-2/3 order-1 p-0.5">
             <EnhancedTaskBoard initialTasks={sampleTasks} />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-              <EnhancedProjectNotes initialNotes={sampleNotes} />
-              <EnhancedStatusOverview tasks={sampleTasks} projectData={projectData} />
-            </div>
           </div>
-          
-          {/* Sidebar - 4/12 on large screens */}
-          <div className="lg:col-span-4 space-y-4 md:space-y-6">
+
+          {/* Team Progress */}
+          <div className="w-full sm:w-1/2 lg:w-1/3 order-2 p-0.5">
             <EnhancedTeamProgress tasks={sampleTasks} />
+          </div>
+
+          {/* Project Notes */}
+          <div className="w-full sm:w-1/2 lg:w-1/3 order-3 p-0.5">
+            <EnhancedProjectNotes initialNotes={sampleNotes} />
+          </div>
+
+          {/* Status Overview */}
+          <div className="w-full sm:w-1/2 lg:w-1/3 order-4 p-0.5">
+            <EnhancedStatusOverview tasks={sampleTasks} projectData={projectData} />
+          </div>
+
+          {/* Quick Links Component */}
+          <div className="w-full sm:w-1/2 lg:w-1/3 order-5 p-0.5">
+            <QuickLinksComponent />
           </div>
         </div>
       </div>
